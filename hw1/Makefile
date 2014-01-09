@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-c -Wall
+CFLAGS=-c -g -Wall -Wextra
 SOURCES=good-old-time.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=oldtime
@@ -12,3 +12,5 @@ $(EXECUTABLE): $(OBJECTS)
 .cpp.o:
 		$(CC) $(CFLAGS) $< -o $@
 
+clean: 
+	rm $(EXECUTABLE) *.o ./word_freqs

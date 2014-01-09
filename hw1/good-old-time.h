@@ -29,7 +29,7 @@ FILE* create_secondary_memory(const char* filename){
 
 /// The field idx arrangement for process_file method
 int get_process_field_count(){
-    return 8;
+    return 7;
 }
 
 int get_idx_stop_word(){
@@ -60,13 +60,11 @@ int get_idx_2nd_freq(){
     return 6;
 }
 
-int get_idx_insert_loop_count(){
-    return 7;
-}
+
 
 /// The field idx arrangement for output_final freq method
 int get_output_field_count(){
-    return 4;
+    return 5;
 }
 
 int get_idx_final_word(){
@@ -85,6 +83,10 @@ int get_idx_final_output_loop_counter(){
     return 3;
 }
 
+int get_idx_insert_loop_count(){
+    return 4;
+}
+
 // byte is enough for 255 fields
 BYTE & get_fields_count(BYTE * data){
     return data[0];
@@ -96,7 +98,9 @@ short & get_field_offset(BYTE * data, int id){
 }
 
 void set_field_length(BYTE * data, int id, short length){
-    get_field_offset(data, id+1) = get_field_offset(data, id) +  length;
+    if ( id + 1 < get_fields_count(data)){
+        get_field_offset(data, id+1) = get_field_offset(data, id) +  length;
+    }
 }
 
 int get_header_size(BYTE * data){
@@ -115,16 +119,16 @@ int & get_offset_current_char(BYTE* data){
     return *((int*) get_field_data( data, get_idx_int_offset_current_char()));
 }
 
+char * get_line_cache(BYTE* data){
+    return get_field_data(data, get_idx_line_cache() );
+}
+
 char & get_current_char(BYTE* data){
-    return *((char*) get_field_data( data, get_offset_current_char(data)));
+    return  *(get_line_cache( data) + get_offset_current_char(data));
 }
 
 void move_forward(BYTE* data){
     get_offset_current_char(data) += 1;
-}
-
-char * get_line_cache(BYTE* data){
-    return get_field_data(data, get_idx_line_cache() );
 }
 
 BYTE & get_start_offset(BYTE* data){
@@ -133,6 +137,10 @@ BYTE & get_start_offset(BYTE* data){
 
 char* get_current_word(BYTE* data){
     return get_line_cache(data) + get_start_offset(data);
+}
+
+int get_word_length(BYTE* data){
+    return get_offset_current_char(data) - get_start_offset(data);
 }
 
 char* get_stop_words(BYTE* data){
