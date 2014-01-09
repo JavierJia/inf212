@@ -29,7 +29,7 @@ FILE* create_secondary_memory(const char* filename){
 
 /// The field idx arrangement for process_file method
 int get_process_field_count(){
-    return 6;
+    return 8;
 }
 
 int get_idx_stop_word(){
@@ -52,10 +52,39 @@ int get_idx_finish_flag(){
     return 4;
 }
 
+int get_idx_2nd_word(){
+    return 5;
+}
+
+int get_idx_2nd_freq(){
+    return 6;
+}
+
+int get_idx_insert_loop_count(){
+    return 7;
+}
+
 /// The field idx arrangement for output_final freq method
 int get_output_field_count(){
-    return ;
+    return 4;
 }
+
+int get_idx_final_word(){
+    return 0;
+}
+
+int get_idx_final_freq(){
+    return 1;
+}
+
+int get_idx_final_base_kth(){
+    return 2;
+}
+
+int get_idx_final_output_loop_counter(){
+    return 3;
+}
+
 // byte is enough for 255 fields
 BYTE & get_fields_count(BYTE * data){
     return data[0];
@@ -98,7 +127,7 @@ char * get_line_cache(BYTE* data){
     return get_field_data(data, get_idx_line_cache() );
 }
 
-BYTE* get_start_offset(BYTE* data){
+BYTE & get_start_offset(BYTE* data){
     return *( (BYTE*) get_field_data(data, get_idx_start_offset()));
 }
 
@@ -118,6 +147,10 @@ char* get_final_word(BYTE* data){
     return get_field_data(data, get_idx_final_word());
 }
 
+int & get_insert_loop_count(BYTE * data){
+    return * ((int*) get_field_data(data, get_idx_insert_loop_count()));
+}
+
 int & get_final_freq(BYTE* data){
     return *((int*) get_field_data(data, get_idx_final_freq()));
 }
@@ -135,11 +168,19 @@ char* get_kth_pair(BYTE* data, int k ){
 }
 
 char* get_kth_word(BYTE* data, int k){
-    retur get_kth_pair(data, k);
+    return get_kth_pair(data, k);
 }
 
 int & get_kth_freq( BYTE* data, int k ){
-    return *((int*) (get_kth_pair() + 20));
+    return *((int*) (get_kth_pair(data, k) + 20));
+}
+
+char*  get_2nd_word( BYTE* data){
+    return get_field_data(data, get_idx_2nd_word());
+}
+
+int & get_2nd_freq(BYTE* data){
+    return *((int*)get_field_data(data, get_idx_2nd_freq()));
 }
 
 #endif

@@ -58,18 +58,18 @@ void initial_for_output(BYTE *data){
 void update( BYTE* data, FILE* secondary_memory){
     fseek(secondary_memory, 0, SEEK_SET);
     while(fread( get_2nd_word(data), 1 , 20, secondary_memory) > 0){
-        fread( get_2nd_freq(data), sizeof(int), 1, secondary_memory);
+        fread( &get_2nd_freq(data), sizeof(int), 1, secondary_memory);
         if ( strcmp( get_current_word(data), get_2nd_word(data)) != 0){
             fseek( secondary_memory, -sizeof(int), SEEK_CUR);
-            * (int*) get_2nd_freq(data) += 1;
-            fwrite( get_2nd_freq(data), sizeof(int), 1, secondary_memory);
+            get_2nd_freq(data) += 1;
+            fwrite( &get_2nd_freq(data), sizeof(int), 1, secondary_memory);
             return ;
         }
     }
     // new word
     fwrite( get_current_word(data), 1, 20, secondary_memory);
-    * (int*)get_2nd_freq(data) = 1;
-    fwrite( get_2nd_freq(data), sizeof(int), 1, secondary_memory);
+    get_2nd_freq(data) = 1;
+    fwrite( &get_2nd_freq(data), sizeof(int), 1, secondary_memory);
 }
 
 /// Read the input file and process the word into secondary_memory 
@@ -94,7 +94,7 @@ void process_input_file(const char* filename, BYTE* data, FILE* secondary_memory
                     && !match(get_current_word(data), get_stop_words(data)) ){
                 update( data, secondary_memory);
             }
-            get_start_offset(data) =  get_offset_current_char() + 1; // point to the next char
+            get_start_offset(data) =  get_offset_current_char(data) + 1; // point to the next char
             move_forward(data);
         }
     }
@@ -105,12 +105,11 @@ void insert(BYTE* data, int idx, char* word, int freq){
     // shift the data from idx to 25 by size of one pair.
     for( get_insert_loop_count(data) = 24; get_insert_loop_count(data) > idx; 
             get_insert_loop_count(data) +=1){
-        memmove( get_kth_pair(data, get_insert_loop_count() -1),
-                 get_kth_pair(data, get_insert_loop_count()) , 20 + 4);
+        memmove( get_kth_pair(data, get_insert_loop_count(data) -1),
+                 get_kth_pair(data, get_insert_loop_count(data)) , 20 + 4);
     }
-    memmove( get_kth_word(data), word, 20);
-    memmove( get_kth_freq(data), &freq, 4);
-    return 
+    memmove( get_kth_word(data, idx), word, 20);
+    memmove( &get_kth_freq(data, idx), &freq, 4);
 }
 
 void find_topk_freq(BYTE* data, FILE * secondary_memory){
@@ -131,7 +130,7 @@ void find_topk_freq(BYTE* data, FILE * secondary_memory){
     for( get_output_loop_counter(data) = 0; get_output_loop_counter(data) < 25; 
             get_output_loop_counter(data) += 1){
         if ( strlen(get_kth_word(data, get_output_loop_counter(data))) == 2){
-            fprintf( "%s - %d", get_kth_word(data, get_output_loop_counter(data)),
+            printf( "%s - %d", get_kth_word(data, get_output_loop_counter(data)),
                     get_kth_freq(data, get_output_loop_counter(data)));
         }
     }
@@ -144,7 +143,7 @@ int main(int argc, char** argv){
 
     initial_for_process(data, 1024, "../stop_words.txt");
     
-    process_input_file(argv[1], data);
+    process_input_file(argv[1], data, secondary_memory);
 
     initial_for_output(data);
 
