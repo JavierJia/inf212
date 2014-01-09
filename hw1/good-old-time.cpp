@@ -19,88 +19,39 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include "good-old-time.h"
 
-typedef char BYTE;
-
-FILE* create_secondary_memory(const char* filename){
-    return fopen(filename, "wb+");
-}
-
-// byte is enough for 255 fields
-BYTE & get_fields_count(BYTE * data){
-    return data[0];
-}
-
-// short is enough for 1024 memory
-short & get_field_offset(BYTE * data, int id){
-    return *((short*)(data+1) + id );
-}
-
-void set_field_length(BYTE * data, int id, short length){
-    get_field_offset(data, id+1) = get_field_offset(data, id) +  length;
-}
-
-int get_header_size(BYTE * data){
-    return 1 + data[0] * sizeof(short);
-}
-
-BYTE* get_field_data(BYTE * data, int id){
-    return data + get_header_size(data) + get_field_offset(data,id) ;
-}
-
-void initial_for_process(BYTE data[], int size_data, int count_fields, const char* stopwords_filename){
-    get_fields_count(data) =  count_fields;
+void initial_for_process(BYTE* data, int size_data,  const char* stopwords_filename){
+    get_fields_count(data) =  get_process_field_count();
 
     FILE* file = fopen(stopwords_filename, "r");
     fgets(get_field_data(data,0) , size_data, file);
     fclose(file);
 
     // data[0]: the stopword list
-    set_field_length(data, 0, (short)( strnlen((char*) data, size_data)));     
+    set_field_length(data, get_idx_stop_word(), (short)( strlen( get_stop_words(data))));     
     // data[1]: the readline, fix 80
-    set_field_length(data, 1, 80);
-    // data[2]: the pointer of current char, 255 is enough for 80 chars.
-    set_field_length(data, 2, 1);
+    set_field_length(data, get_idx_line_cache(), 80);
+    // data[2]: the pointer of current char .
+    set_field_length(data, get_idx_int_offset_current_char(), 4);
     // data[3]: the start pos of the word, 255 is enough;
-    set_field_length(data, 3, 1);
-    // data[4]: the word in secondary_memory, assume the longgest word is length 32
-    set_field_length(data, 4, 32);
-    // data[5]: the word frequency
-    set_field_length(data, 5, sizeof(int));
-    // data[6]: if already exists
-    set_field_length(data, 6, 1);
+    set_field_length(data, get_idx_start_offset(), 1);
+    // data[4]: the flag to show if the stream is over; 
+    set_field_length(data, get_idx_finish_flag(), 1);
 }
 
-bool & get_finish_flag(BYTE* data){
-    return *((bool*) get_field_data( data, get_idx_finish_flag()));
-}
 
-int & get_offset_current_char(BYTE* data){
-    return *((int*) get_field_data( data, get_idx_int_offset_current_char()));
-}
-
-char & get_current_char(BYTE* data){
-    return *((char*) get_field_data( data, get_offset_current_char(data)));
-}
-
-void move_forward(BYTE* data){
-    get_offset_current_char(data) += 1;
-}
-
-char * get_line_cache(BYTE* data){
-    return get_field_data(data, get_idx_line_cache() );
-}
-
-char* get_current_word(BYTE* data){
-    return get_line_cache(data) + get_start_offset(data);
-}
-
-char* get_stop_words(BYTE* data){
-    return get_field_data(data, get_idx_stop_word());
-}
-
-bool match ( char* word, char* stop_words){
-    return strstr(stop_words, word) != NULL;
+void initial_for_output(BYTE *data){
+    get_fields_count(data) = get_output_field_count();
+    
+    // each word is at most 20 chars + 1 for '\0'
+    set_field_length(data, get_idx_final_word(), 21);
+    // the freq 
+    set_field_length(data, get_idx_final_freq(), 4);
+    // the base location to store all the pairs
+    set_field_length(data, get_idx_final_base_kth(), 25 * (21+4));
+    // the space to store the internal loop "i"
+    set_field_length(data, get_idx_final_output_loop_counter(), 4);
 }
 
 /// Update the cur_word into secondary_memory;
@@ -115,14 +66,14 @@ void update( BYTE* data, FILE* secondary_memory){
             return ;
         }
     }
-    // didn't find it
+    // new word
     fwrite( get_current_word(data), 1, 20, secondary_memory);
     * (int*)get_2nd_freq(data) = 1;
     fwrite( get_2nd_freq(data), sizeof(int), 1, secondary_memory);
 }
 
 /// Read the input file and process the word into secondary_memory 
-void process_input(const char* filename, BYTE* data, FILE* secondary_memory){
+void process_input_file(const char* filename, BYTE* data, FILE* secondary_memory){
     FILE * fp = fopen(filename, "r");
     // get line to data[1]
     while (fgets(get_line_cache(data) , 80, fp)){
@@ -139,7 +90,8 @@ void process_input(const char* filename, BYTE* data, FILE* secondary_memory){
             }
             // find a word 
             get_current_char(data) =  0;
-            if ( strnlen(get_current_word(data), 20) > 1 && !match(get_current_word(data), get_stop_words(data)) ){
+            if ( strnlen(get_current_word(data), 20) > 1 
+                    && !match(get_current_word(data), get_stop_words(data)) ){
                 update( data, secondary_memory);
             }
             get_start_offset(data) =  get_offset_current_char() + 1; // point to the next char
@@ -149,17 +101,38 @@ void process_input(const char* filename, BYTE* data, FILE* secondary_memory){
     fclose(fp);
 }
 
-void output_freq(BYTE* data, FILE * secondary_memory){
+void insert(BYTE* data, int idx, char* word, int freq){
+    // shift the data from idx to 25 by size of one pair.
+    for( get_insert_loop_count(data) = 24; get_insert_loop_count(data) > idx; 
+            get_insert_loop_count(data) +=1){
+        memmove( get_kth_pair(data, get_insert_loop_count() -1),
+                 get_kth_pair(data, get_insert_loop_count()) , 20 + 4);
+    }
+    memmove( get_kth_word(data), word, 20);
+    memmove( get_kth_freq(data), &freq, 4);
+    return 
+}
+
+void find_topk_freq(BYTE* data, FILE * secondary_memory){
     fflush(secondary_memory);
     fseek( secondary_memory, 0, SEEK_SET);
     while(fread( get_final_word(data), 1 , 20, secondary_memory) > 0){
-        fread( get_final_freq(data), sizeof(int), 1, secondary_memory);
- 
-        while ( get_output_loop_counter(data) < 25){
-            if ( get_topk_freq(data, get_output_loop_counter(data)) < get_cur_dict_freq(data)){
-                insert( data, get_cur_dict_word(data), get_cur_dict_freq(data));
+        fread( &get_final_freq(data), sizeof(int), 1, secondary_memory);
+
+        for (get_output_loop_counter(data) = 0; get_output_loop_counter(data) < 25; 
+                get_output_loop_counter(data) +=1){
+
+            if ( get_kth_freq(data, get_output_loop_counter(data)) < get_final_freq(data)){
+                insert( data, get_output_loop_counter(data),  get_final_word(data), get_final_freq(data));
             }
-            get_output_loop_counter(data) +=1;
+        }
+    }
+
+    for( get_output_loop_counter(data) = 0; get_output_loop_counter(data) < 25; 
+            get_output_loop_counter(data) += 1){
+        if ( strlen(get_kth_word(data, get_output_loop_counter(data))) == 2){
+            fprintf( "%s - %d", get_kth_word(data, get_output_loop_counter(data)),
+                    get_kth_freq(data, get_output_loop_counter(data)));
         }
     }
 }
@@ -171,11 +144,11 @@ int main(int argc, char** argv){
 
     initial_for_process(data, 1024, "../stop_words.txt");
     
-    process_input(argv[1], data);
+    process_input_file(argv[1], data);
 
     initial_for_output(data);
 
-    output_freq(data, secondary_memory);
+    find_topk_freq(data, secondary_memory);
 
     fclose(secondary_memory);
 }
