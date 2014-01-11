@@ -3,7 +3,25 @@
  *
  *       Filename:  good-old-time.cpp
  *
- *    Description:  
+ *    Description:  This the program for the INF 212 Good old time
+ *                  This program is constrained to not use the variable and also 
+ *                  should work correctly under memory limit situation.
+ *
+ *                  The data[1024] is treated as a main memory. 
+ *                  I borrowed the record idea in database to split this data[]
+ *                  It contains a header, which is the metadata showing how many 
+ *                  fields inside this record, and what is the offset of each fields.
+ *                  
+ *                  data = [header][ fields data]
+ *                  header = [count of fields][#0 offset][#1 offset][#2 offset] ....
+ *                  fields data = [ void * .... ] 
+ *
+ *                  In this way we can create as many variable as possible and don't
+ *                  need to pay much more attention about their types. 
+ *
+ *                  I create a bunch of method to get the conresponding fields data,
+ *                  like get_word_freq(data) would check the # of the word_freq field,
+ *                  and return the &(void*) of the offset inside data[]
  *
  *        Version:  1.0
  *        Created:  01/06/2014 21:58:24
@@ -38,9 +56,9 @@ void initial_for_process(BYTE* data, int size_data,  const char* stopwords_filen
     set_field_length(data, get_idx_start_offset(), 1);
     // data[4]: the flag to show if the stream is over; 
     set_field_length(data, get_idx_finish_flag(), 1);
-
+    // data[5]: cached word to insert
     set_field_length(data, get_idx_2nd_word(), 21);
-
+    // data[5]: cached freq to insert
     set_field_length(data, get_idx_2nd_freq(), 4);
 
 }
@@ -165,6 +183,7 @@ int main(int argc, char** argv){
         return 0;
     }
 
+    // this is the ONLY variable name used in the following methods
     BYTE data[1024] = {0};
 
     FILE* secondary_memory = create_secondary_memory("word_freqs");
