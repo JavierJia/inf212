@@ -14,7 +14,7 @@ def normalize words, word_freqs, scan_func
 end
 
 def scan words, word_freqs, remove_stop_word_func
-    remove_stop_word_func.call  words.split, word_freqs, method(:frequecies)
+    remove_stop_word_func.call words.split, word_freqs, method(:frequecies)
 end
 
 def remove_stop_word words, word_freqs, frequecies_func
