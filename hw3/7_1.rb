@@ -1,13 +1,8 @@
 #!/usr/bin/ruby
 
-RubyVM::InstructionSequence.compile_option = {
-    :tailcall_optimization => true,
-    :trace_instruction => false
-}
-
-$stopwords = File.read('../stop_words.txt').downcase.split(',')
-words = File.read(ARGV[0]).downcase.split(/[\W_]+/).reject {|a| a.length == 0 }
 STACK_DEPTH = 5000
+$stopwords = File.read('../stop_words.txt').downcase.split(',')
+words = File.read(ARGV[0]).downcase.split(/[\W_]+/).reject {|a| a.length < 2 }
 
 def count word_list,word_freq
     if word_list != nil and word_list.length > 0
