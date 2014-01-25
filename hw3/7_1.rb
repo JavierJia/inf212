@@ -1,6 +1,6 @@
 #!/usr/bin/ruby
 
-STACK_DEPTH = 5000
+STACK_DEPTH = 4000
 $stopwords = File.read('../stop_words.txt').downcase.split(',')
 words = File.read(ARGV[0]).downcase.split(/[\W_]+/).reject {|a| a.length < 2 }
 
