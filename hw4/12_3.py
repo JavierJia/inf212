@@ -57,6 +57,5 @@ for w in data_storage_obj['words']():
     if not stop_words_obj['is_stop_word'](w):
         word_freqs_obj['increment_count'](w)
 
-# Python 2.7 doesn't allow the print inside lamda, so I package the output string here and print them once
 print word_freqs_obj['top25']()
 
