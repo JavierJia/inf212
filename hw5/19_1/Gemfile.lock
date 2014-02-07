@@ -1,0 +1,31 @@
+PATH
+  remote: ./frequencies_1
+  specs:
+    frequencies_1 (0.0.1)
+
+PATH
+  remote: ./frequencies_2
+  specs:
+    frequencies_2 (0.0.1)
+
+PATH
+  remote: ./word_extractor_1
+  specs:
+    word_extractor_1 (0.0.1)
+
+PATH
+  remote: ./word_extractor_2
+  specs:
+    word_extractor_2 (0.0.1)
+
+GEM
+  specs:
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  frequencies_1 (= 0.0.1)!
+  frequencies_2 (= 0.0.1)!
+  word_extractor_1 (= 0.0.1)!
+  word_extractor_2 (= 0.0.1)!

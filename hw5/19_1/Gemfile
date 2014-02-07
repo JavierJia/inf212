@@ -1,0 +1,5 @@
+
+gem "word_extractor_1",'0.0.1', :path => "./word_extractor_1"
+gem "word_extractor_2",'0.0.1', :path => "./word_extractor_2"
+gem "frequencies_1",'0.0.1', :path => "./frequencies_1"
+gem "frequencies_2",'0.0.1', :path => "./frequencies_2"

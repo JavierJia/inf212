@@ -36,10 +36,13 @@ def profile(f):
         return ret_value
     return profilewrapper
 
-def trace(f):
+def trace(f, profiler = None):
     def tracewrapper(*arg, **kw):
         print "Entering %s" % f.func_name
-        ret_value = f(*arg, **kw)
+        if profiler == None:
+            ret_value = f(*arg, **kw)
+        else:
+            ret_value = profiler(f) (*arg, **kw)
         print "Exiting %s" % f.func_name
         return ret_value
     return tracewrapper
@@ -48,7 +51,8 @@ def trace(f):
 tracked_functions = [extract_words, frequencies, sort]
 # weaver
 for func in tracked_functions:
-    globals()[func.func_name]=trace(profile(func))
+    # Connnect two functions
+    globals()[func.func_name]=trace(func, profile)
 
 word_freqs = sort(frequencies(extract_words(sys.argv[1])))
 

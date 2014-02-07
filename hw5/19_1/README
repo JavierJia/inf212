@@ -1,0 +1,21 @@
+Hi Professor, 
+
+I'm using "ruby bundle" to write gem packages.
+There are two "word_extractor" lib and two "frequencies" lib in the folder.
+
+Then I'm using the 'Gemfile' to install all the packages by run 
+> bundle install
+
+The `config.rb` is the configuration to sepecify which lib we gonna use. 
+The actual run file `19_1.rb` will include the conresponding lib specified in 
+`config.rb`.
+
+To be able to run the program, I need to call bundle again to load the package 
+and then run the program
+
+> bundle exec ruby 19_1.rb ../pride-and-prejudice.txt
+
+The simple way is to call the ./run.sh <the_file_path>
+e.g.
+> ./run.sh ../pride-and-prejudice.txt
+
