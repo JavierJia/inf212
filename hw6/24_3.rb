@@ -15,7 +15,7 @@ class TFQuarantine
             (v.is_a? Proc) ? v.call() : v
         end
 
-        @funcs.each_with_object([lambda {nil}]) { |f,v|
+        @funcs.each_with_object([]) { |f,v|
             v[0] = f.call(guard_callable(v[0]))
         }
 
@@ -63,7 +63,9 @@ def print_top25 wf
     }
 end
 
-TFQuarantine.new().bind(method(:get_input))
+TFQuarantine.new()
+            .bind(lambda {|v|}) # dummy head
+            .bind(method(:get_input))
             .bind(method(:read_file))
             .bind(method(:filter_chars))
             .bind(method(:normalize))
@@ -72,5 +74,5 @@ TFQuarantine.new().bind(method(:get_input))
             .bind(method(:frequencies))
             .bind(method(:sort))
             .bind(method(:print_top25))
-            .bind(lambda {|v|})  # do nothing
+            .bind(lambda {|v|})  # dummy tail
             .execute
