@@ -16,15 +16,21 @@ def split_word lines
 end
 
 def regrouping partial_list
-    result = partial_list.each_with_object(Hash.new) do |tuple, hash|
-        hash[tuple[0]] = Array.new unless hash.has_key? tuple[0]
-        hash[tuple[0]] << tuple
+    partial_list.each_with_object(Array.new(5){[]}) do |tuple, grouped|
+        word = tuple[0]
+        idx = case word[0]
+            when 'a'..'e' then 0
+            when 'f'..'j' then 1
+            when 'k'..'o' then 2
+            when 'p'..'t' then 3
+            else 4
+        end
+        grouped[idx] << tuple
     end
-    result.to_a
 end
 
 def reduce value
-    [value[0], value[1].reduce(0) { |sum,pair| sum += pair[1] }]
+    value.reduce(Hash.new(0)) { |hash, pair| hash[pair[0]] += pair[1]; hash}.to_a
 end
 
 # map
@@ -39,6 +45,6 @@ grouped = regrouping sub_result
 # reduce
 grouped.map!{ |value| reduce value}
 
-grouped.sort_by {|element| -element[1]}.first(25).each do |struct|
+grouped.flatten(1).sort_by {|element| -element[1]}.first(25).each do |struct|
     puts "#{struct[0]} - #{struct[1]}"
 end
