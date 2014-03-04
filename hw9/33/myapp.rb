@@ -18,6 +18,10 @@ get '/upload' do
 end
 
 post '/upload' do
+    if params['file']== nil
+        return "<p> file not valid , please <a href='/upload'> upload again </a> "
+    end
+
     filename = params['file'][:filename]
     freq = params['file'][:tempfile].read.downcase.scan(/[a-z]{2,}/).each_with_object(Hash.new(0)) do |word, hash|
         hash[word] +=1 unless $stopword.include? word
@@ -43,7 +47,7 @@ get '/freq/*/*' do |filename, offset|
     if $offset > 0
         code += "<td><a href='/freq/<%=$filename%>/<%= $offset-25 %>'> prev  </a></td>"
     end
-    if $offset < $freq[filename].length
+    if $offset+25 < $freq[filename].length
         code += "<td><a href='/freq/<%=$filename%>/<%= $offset+25 %>'> next  </a></td>"
     end
     code += "</tr></table>"
